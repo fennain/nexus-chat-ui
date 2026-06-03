@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "antd-components": {
+      "command": "npx",
+      "args": ["-y", "@jzone-mcp/antd-components-mcp"]
+    },
+    "semi-mcp": {
+      "command": "npx",
+      "args": ["-y", "@douyinfe/semi-mcp"] // 内网用户请将包名修改为 @ies/semi-mcp-bytedance
+    }
+  }
+}

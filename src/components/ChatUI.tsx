@@ -66,11 +66,13 @@ function NexusChatUIContent({
     connectionStatus,
     conversations,
     handleChange,
+    handleAttachmentUpload,
     handleLoadPreviousMessages,
     handleReconnect,
     handleSend,
     hasReconnectExhausted,
     inputValue,
+    isAttachmentUploading,
     isMessagesLoading,
     messages,
     resolvedDisabled,
@@ -262,6 +264,7 @@ function NexusChatUIContent({
               isMessagesLoading={isMessagesLoading}
               messages={messages}
               inputValue={inputValue}
+              isAttachmentUploading={isAttachmentUploading}
               placeholder={placeholder}
               resolvedDisabled={resolvedDisabled}
               headerAvatar={activeConversationProfile?.avatarUrl ?? DEFAULT_AVATAR}
@@ -278,6 +281,7 @@ function NexusChatUIContent({
               currentUserId={currentUser?.userId}
               onAddMemberClick={handleOpenAddChannelMemberModal}
               onBackClick={handleBackToList}
+              onAttachmentUpload={handleAttachmentUpload}
               onReconnect={handleReconnect}
               onScrollTop={handleLoadPreviousMessages}
               style={chatContainerStyle}

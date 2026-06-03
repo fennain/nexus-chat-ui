@@ -13,6 +13,7 @@ import type {
   ContactRequestItem,
 } from '@/api/interface'
 import type {
+  ChatAttachmentKind,
   ChannelRole,
   ChatChannelItem,
   ChatChannelMemberDetail,
@@ -62,6 +63,41 @@ const normalizeChannelRole = (value: unknown): ChannelRole | undefined =>
 const normalizeRoomType = (roomType?: unknown): ChatMessageItem['roomType'] =>
   roomType === 'CHANNEL' ? 'CHANNEL' : 'CONVERSATION'
 
+const normalizeAttachmentKind = (value: unknown): ChatAttachmentKind | undefined =>
+  value === 'IMAGE' || value === 'FILE' || value === 'AUDIO'
+    ? value
+    : undefined
+
+const normalizeSocketAttachment = (value: unknown): ChatMessageItem['attachment'] => {
+  const attachment = toRecord(value)
+  const kind = normalizeAttachmentKind(attachment?.kind)
+
+  if (
+    !attachment ||
+    !kind ||
+    typeof attachment.url !== 'string' ||
+    typeof attachment.name !== 'string' ||
+    typeof attachment.mime !== 'string'
+  ) {
+    return undefined
+  }
+
+  return {
+    fileId: typeof attachment.fileId === 'string' ? attachment.fileId : attachment.url,
+    objectKey: typeof attachment.objectKey === 'string' ? attachment.objectKey : undefined,
+    url: attachment.url,
+    thumbnailUrl:
+      typeof attachment.thumbnailUrl === 'string' ? attachment.thumbnailUrl : undefined,
+    name: attachment.name,
+    mime: attachment.mime,
+    size: typeof attachment.size === 'number' ? attachment.size : 0,
+    kind,
+    width: typeof attachment.width === 'number' ? attachment.width : undefined,
+    height: typeof attachment.height === 'number' ? attachment.height : undefined,
+    duration: typeof attachment.duration === 'number' ? attachment.duration : undefined,
+  }
+}
+
 const normalizeSocketMessage = (
   value: unknown,
   options: { requireText?: boolean } = {},
@@ -70,8 +106,9 @@ const normalizeSocketMessage = (
   const payload = toRecord(record?.data) ?? record
   const encryption = toRecord(payload?.encryption)
   const text = typeof encryption?.text === 'string' ? encryption.text : undefined
+  const attachment = normalizeSocketAttachment(payload?.attachment)
 
-  if (!payload || (options.requireText && !text?.trim())) {
+  if (!payload || (options.requireText && !text?.trim() && !attachment)) {
     return undefined
   }
 
@@ -87,6 +124,7 @@ const normalizeSocketMessage = (
       scheme: typeof encryption?.scheme === 'string' ? encryption.scheme : undefined,
       text,
     },
+    attachment,
     sentAt: typeof payload.sentAt === 'string' ? payload.sentAt : undefined,
   }
 }

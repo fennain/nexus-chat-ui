@@ -1,4 +1,9 @@
-import type { ChatChannelMemberDetail, ChatMessageEncryption, ChatUserId } from '@/types'
+import type {
+  ChatAttachmentItem,
+  ChatChannelMemberDetail,
+  ChatMessageEncryption,
+  ChatUserId,
+} from '@/types'
 
 // Request response parameters (excluding data)
 
@@ -45,6 +50,7 @@ export interface MessageHistoryItem {
   type: string;
   status: string;
   encryption: ChatMessageEncryption;
+  attachment?: ChatAttachmentItem;
   sentAt: string;
 }
 

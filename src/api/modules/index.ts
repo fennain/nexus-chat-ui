@@ -5,8 +5,37 @@ import type {
   MessageHistoryItem,
   ContactActionResult,
 } from '@/api/interface'
-import type { ChannelRole, ChatChannelMemberDetail, ChatUserId } from '@/types'
+import type {
+  ChannelRole,
+  ChatAttachmentItem,
+  ChatAttachmentKind,
+  ChatChannelMemberDetail,
+  ChatUserId,
+} from '@/types'
+import { getChatConnectionState } from '@/store/useChatConnectionStore'
 export * from './contact'
+
+const resolveAttachmentUrl = (url?: string) => {
+  if (!url) return url
+  if (/^(?:[a-z][a-z\d+\-.]*:)?\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) {
+    return url
+  }
+
+  const { httpUrl } = getChatConnectionState()
+  if (!httpUrl) return url
+
+  try {
+    return new URL(url, httpUrl).toString()
+  } catch {
+    return url
+  }
+}
+
+const normalizeAttachmentUrl = (attachment: ChatAttachmentItem): ChatAttachmentItem => ({
+  ...attachment,
+  url: resolveAttachmentUrl(attachment.url) || attachment.url,
+  thumbnailUrl: resolveAttachmentUrl(attachment.thumbnailUrl),
+})
 
 // 查询单聊会话列表
 export const getConversationsApi = () => {
@@ -73,4 +102,25 @@ export const updateChannelMemberRoleApi = (
     `/api/v1/channels/${channelId}/members/${encodedUserId}/role`,
     { role },
   )
+}
+
+export const uploadAttachmentApi = (
+  file: File,
+  kind: Lowercase<ChatAttachmentKind>,
+  metadata?: {
+    duration?: number
+  },
+) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('kind', kind)
+
+  if (metadata?.duration !== undefined) {
+    formData.append('duration', String(metadata.duration))
+  }
+
+  return http.post<ChatAttachmentItem>('/api/v1/uploads', formData).then((response) => ({
+    ...response,
+    data: normalizeAttachmentUrl(response.data),
+  }))
 }

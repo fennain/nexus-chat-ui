@@ -8,6 +8,8 @@ export { useChatConnection } from '@/hooks/useChatConnection'
 export { useChatMessages } from '@/hooks/useChatMessages'
 export type {
   ChannelRole,
+  ChatAttachmentItem,
+  ChatAttachmentKind,
   ChatChannelItem,
   ChatChannelMemberDetail,
   ChatConnectionContext,

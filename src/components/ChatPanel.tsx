@@ -11,6 +11,7 @@ import { MessageScrollList } from "@/components/MessageScrollList";
 import { useBasicLayout } from "@/hooks/useBasicLayout";
 import type {
   ChatChannelMemberDetail,
+  ChatAttachmentKind,
   ChatConnectionStatus,
   ChatMessageItem,
   ChatUserId,
@@ -23,6 +24,7 @@ interface NexusChatPanelProps {
   connectionStatus: ChatConnectionStatus;
   hasReconnectExhausted: boolean;
   isMessagesLoading: boolean;
+  isAttachmentUploading: boolean;
   messages: ChatMessageItem[];
   inputValue: string;
   placeholder: string;
@@ -38,6 +40,11 @@ interface NexusChatPanelProps {
   channelMembersDetail?: ChatChannelMemberDetail[];
   currentUserId?: ChatUserId;
   onAddMemberClick?: () => void;
+  onAttachmentUpload?: (
+    file: File,
+    kind: Lowercase<ChatAttachmentKind>,
+    metadata?: { duration?: number },
+  ) => Promise<void>;
   onBackClick?: () => void;
   onReconnect?: () => void;
   onScrollTop?: (scrollContainer: HTMLDivElement) => void;
@@ -52,6 +59,7 @@ export function ChatPanel({
   connectionStatus,
   hasReconnectExhausted,
   isMessagesLoading,
+  isAttachmentUploading,
   messages,
   inputValue,
   placeholder,
@@ -66,6 +74,7 @@ export function ChatPanel({
   channelMembersDetail = [],
   currentUserId,
   onAddMemberClick,
+  onAttachmentUpload,
   onBackClick,
   onReconnect,
   onScrollTop,
@@ -173,7 +182,10 @@ export function ChatPanel({
         placeholder={placeholder}
         disabled={resolvedDisabled}
         sendDisabled={resolvedDisabled}
+        uploadDisabled={resolvedDisabled || isAttachmentUploading}
+        uploading={isAttachmentUploading}
         onChange={onChange}
+        onUpload={onAttachmentUpload}
         onSend={onSend}
       />
 

@@ -1,5 +1,6 @@
 export type ChatMessageDirection = 'incoming' | 'outgoing'
 export type ChatMessagePosition = 'single' | 'first' | 'normal' | 'last'
+export type ChatAttachmentKind = 'IMAGE' | 'FILE' | 'AUDIO'
 /** 用户 ID 允许保留接口原始类型；内部比较/索引时统一转字符串处理。 */
 export type ChatUserId = string | number
 export type ChatConnectionStatus =
@@ -24,6 +25,20 @@ export interface ChatMessageEncryption {
   text?: string
 }
 
+export interface ChatAttachmentItem {
+  fileId: string
+  objectKey?: string
+  url: string
+  thumbnailUrl?: string
+  name: string
+  mime: string
+  size: number
+  kind: ChatAttachmentKind
+  width?: number
+  height?: number
+  duration?: number
+}
+
 export interface ChatMessageItem {
   _id?: string
   roomId?: string
@@ -32,6 +47,7 @@ export interface ChatMessageItem {
   type?: string
   status?: string
   encryption?: ChatMessageEncryption
+  attachment?: ChatAttachmentItem
   sentAt?: string
 }
 

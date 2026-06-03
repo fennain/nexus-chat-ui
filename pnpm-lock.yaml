@@ -26,6 +26,9 @@ importers:
       dayjs:
         specifier: ^1.11.20
         version: 1.11.20
+      lodash:
+        specifier: 4.18.1
+        version: 4.18.1
       react-responsive:
         specifier: ^10.0.1
         version: 10.0.1(react@19.2.6)

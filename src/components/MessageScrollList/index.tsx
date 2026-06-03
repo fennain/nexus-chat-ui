@@ -105,6 +105,7 @@ export function MessageScrollList({
                     id={item._id}
                     channelId={isChannel ? item.roomId : undefined}
                     userId={senderId}
+                    attachment={item.attachment}
                     avatar={
                       senderAvatar !== "Unknown" ? senderAvatar : DEFAULT_AVATAR
                     }

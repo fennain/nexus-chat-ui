@@ -1,4 +1,10 @@
-import type { ChatConnectionContext, ChatConversationItem, ChatMessageItem, ChatUserId } from '@/types'
+import type {
+  ChatAttachmentItem,
+  ChatConnectionContext,
+  ChatConversationItem,
+  ChatMessageItem,
+  ChatUserId,
+} from '@/types'
 
 const normalizeRoomType = (roomType?: string): ChatConversationItem['roomType'] =>
   roomType === 'CHANNEL' ? 'CHANNEL' : 'CONVERSATION'
@@ -36,6 +42,7 @@ export const createOutgoingPayload = (
       roomId: message.roomId,
       type: message.type ?? 'TEXT',
       ciphertext: message.encryption?.text ?? '',
+      ...(message.attachment ? { attachment: message.attachment } : {}),
     },
   })
 }
@@ -56,5 +63,25 @@ export const createLocalMessage = (
     scheme: 'NONE',
     text: message,
   },
+  sentAt: new Date().toISOString(),
+})
+
+export const createLocalAttachmentMessage = (
+  attachment: ChatAttachmentItem,
+  conversationId?: string,
+  senderId?: ChatUserId,
+  roomType: ChatConversationItem['roomType'] = 'CONVERSATION',
+): ChatMessageItem => ({
+  _id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+  roomId: conversationId,
+  roomType,
+  senderId,
+  type: attachment.kind,
+  status: 'sending',
+  encryption: {
+    scheme: 'NONE',
+    text: attachment.name,
+  },
+  attachment,
   sentAt: new Date().toISOString(),
 })

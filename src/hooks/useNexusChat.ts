@@ -3,9 +3,10 @@ import {
   getContactsApi,
   getContactRequestsApi,
   getConversationsApi,
+  uploadAttachmentApi,
 } from '@/api/modules'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { createLocalMessage } from '@/lib/chatProtocol'
+import { createLocalAttachmentMessage, createLocalMessage } from '@/lib/chatProtocol'
 import { hasUserId } from '@/lib/chatUser'
 import { useChatSessionsStore } from '@/store/useChatSessionsStore'
 import { useChatUsersStore } from '@/store/useChatUsersStore'
@@ -18,6 +19,7 @@ import { useNexusChatProfiles } from '@/hooks/useNexusChatProfiles'
 import type {
   ChatConnectionContext,
   ChatConnectionStatus,
+  ChatAttachmentKind,
   ChatConversationItem,
   ChatMessageItem,
   ChatUserProfile,
@@ -53,12 +55,18 @@ export interface UseNexusChatResult {
   connectionStatus: ChatConnectionStatus
   hasReconnectExhausted: boolean
   inputValue: string
+  isAttachmentUploading: boolean
   isMessagesLoading: boolean
   messages: ChatMessageItem[]
   resolvedDisabled: boolean
   handleChange: (innerHtml: string, textContent: string, innerText: string) => void
   handleReconnect: () => void
   handleSend: (innerHtml: string, textContent: string, innerText: string) => void
+  handleAttachmentUpload: (
+    file: File,
+    kind: Lowercase<ChatAttachmentKind>,
+    metadata?: { duration?: number },
+  ) => Promise<void>
   handleLoadPreviousMessages: (scrollContainer?: HTMLElement | null) => Promise<void>
 }
 
@@ -77,6 +85,7 @@ export function useNexusChat({
   userId,
 }: UseNexusChatOptions): UseNexusChatResult {
   const [inputValue, setInputValue] = useState('')
+  const [isAttachmentUploading, setIsAttachmentUploading] = useState(false)
   const hasToken = Boolean(token.trim())
   const allUserList = useChatUsersStore((state) => state.allUserList)
   const setContactList = useChatUsersStore((state) => state.setContactList)
@@ -325,16 +334,65 @@ export function useNexusChat({
     ],
   )
 
+  const handleAttachmentUpload = useCallback(
+    async (
+      file: File,
+      kind: Lowercase<ChatAttachmentKind>,
+      metadata?: { duration?: number },
+    ) => {
+      if (!resolvedActiveConversationId || resolvedDisabled) {
+        return
+      }
+
+      setIsAttachmentUploading(true)
+
+      try {
+        const response = await uploadAttachmentApi(file, kind, metadata)
+        const attachment = response.data
+        const nextMessage = createLocalAttachmentMessage(
+          attachment,
+          resolvedActiveConversationId,
+          userId,
+          activeConversation?.roomType ?? 'CONVERSATION',
+        )
+
+        appendMessages([nextMessage], resolvedActiveConversationId)
+
+        if (nextMessage._id) {
+          trackOptimisticMessage(nextMessage._id, resolvedActiveConversationId)
+        }
+
+        sendMessage(nextMessage)
+      } catch (error) {
+        onError?.(error)
+      } finally {
+        setIsAttachmentUploading(false)
+      }
+    },
+    [
+      activeConversation?.roomType,
+      appendMessages,
+      onError,
+      resolvedActiveConversationId,
+      resolvedDisabled,
+      sendMessage,
+      trackOptimisticMessage,
+      userId,
+    ],
+  )
+
   return {
     conversations,
     activeConversationId: resolvedActiveConversationId,
     connectionStatus: status,
     hasReconnectExhausted,
     inputValue,
+    isAttachmentUploading,
     isMessagesLoading,
     messages,
     resolvedDisabled,
     handleChange,
+    handleAttachmentUpload,
     handleReconnect: reconnect,
     handleSend,
     handleLoadPreviousMessages: loadPreviousHistoryMessages,
